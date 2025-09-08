@@ -16,7 +16,6 @@ import {
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
-  Paper,
   Alert,
   Accordion,
   AccordionSummary,

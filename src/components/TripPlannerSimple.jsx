@@ -1,0 +1,574 @@
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  TextField,
+  FormControl,
+  Select,
+  MenuItem,
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  CircularProgress,
+  Paper,
+  Divider,
+  IconButton,
+  Tabs,
+  Tab,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
+} from '@mui/material';
+import {
+  AutoAwesome as AutoAwesomeIcon,
+  Close as CloseIcon,
+  Save as SaveIcon,
+  TravelExplore as TravelExploreIcon,
+  LocationOn as LocationIcon,
+  Hotel as HotelIcon,
+  LocalActivity as ActivityIcon,
+  ExpandMore as ExpandMoreIcon
+} from '@mui/icons-material';
+import { geminiService } from '../services/GeminiService.js';
+
+/**
+ * Tab panel component for trip planner
+ * @param {Object} props
+ * @param {React.ReactNode} props.children
+ * @param {number} props.index
+ * @param {number} props.value
+ */
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`ai-tabpanel-${index}`}
+      aria-labelledby={`ai-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Trip planner component with AI integration
+ * @param {Object} props
+ * @param {function} props.onTripCreated
+ */
+const TripPlanner = ({ onTripCreated }) => {
+  const [activeTab, setActiveTab] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Form state
+  const [destination, setDestination] = useState('');
+  const [duration, setDuration] = useState(7);
+  const [startDate, setStartDate] = useState('');
+  const [interests, setInterests] = useState([]);
+  const [budget, setBudget] = useState('mid-range');
+  
+  // Results state
+  const [aiResponse, setAiResponse] = useState('');
+  const [structuredPlan, setStructuredPlan] = useState(null);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+
+  const interestOptions = [
+    'Art & Museums', 'Food & Dining', 'History', 'Nature & Outdoors', 
+    'Architecture', 'Nightlife', 'Shopping', 'Adventure Sports', 
+    'Cultural Events', 'Photography', 'Beach & Water', 'Mountains'
+  ];
+
+  const handleInterestToggle = (interest) => {
+    setInterests(prev => 
+      prev.includes(interest) 
+        ? prev.filter(i => i !== interest)
+        : [...prev, interest]
+    );
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+    setError(null);
+    setAiResponse('');
+  };
+
+  const generateTripPlan = async () => {
+    if (!destination.trim()) {
+      setError('Please enter a destination');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setAiResponse('');
+
+    try {
+      const response = await geminiService.generateDestinationRecommendations(
+        destination,
+        duration,
+        interests
+      );
+      setAiResponse(response);
+    } catch (err) {
+      setError(err.message || 'Failed to generate trip plan');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateHotelRecommendations = async () => {
+    if (!destination.trim()) {
+      setError('Please enter a destination');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setAiResponse('');
+
+    try {
+      const response = await geminiService.generateHotelRecommendations(destination, budget);
+      setAiResponse(response);
+    } catch (err) {
+      setError(err.message || 'Failed to generate hotel recommendations');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateActivities = async () => {
+    if (!destination.trim()) {
+      setError('Please enter a destination');
+      return;
+    }
+
+    if (interests.length === 0) {
+      setError('Please select at least one interest');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setAiResponse('');
+
+    try {
+      const response = await geminiService.generateActivitiesRecommendations(destination, interests);
+      setAiResponse(response);
+    } catch (err) {
+      setError(err.message || 'Failed to generate activity recommendations');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateStructuredPlan = async () => {
+    if (!destination.trim() || !startDate) {
+      setError('Please enter a destination and start date');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setStructuredPlan(null);
+
+    try {
+      const result = await geminiService.generateAndSaveTrip(
+        destination,
+        duration,
+        startDate,
+        interests,
+        false // Don't save yet, just generate
+      );
+      setStructuredPlan(result.suggestion);
+      setShowSaveDialog(true);
+    } catch (err) {
+      setError(err.message || 'Failed to generate structured trip plan');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveGeneratedTrip = async () => {
+    if (!structuredPlan) return;
+
+    setLoading(true);
+    try {
+      await geminiService.generateAndSaveTrip(
+        destination,
+        duration,
+        startDate,
+        interests,
+        true // Save to database
+      );
+      setShowSaveDialog(false);
+      setStructuredPlan(null);
+      onTripCreated(); // Refresh the trip list
+      
+      // Reset form
+      setDestination('');
+      setStartDate('');
+      setInterests([]);
+      setActiveTab(0);
+    } catch (err) {
+      setError(err.message || 'Failed to save trip');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isApiConfigured = geminiService.isConfigured();
+
+  return (
+    <Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <AutoAwesomeIcon sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
+        <Typography variant="h4">AI Trip Planner</Typography>
+      </Box>
+
+      {!isApiConfigured && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          <Typography variant="body2">
+            <strong>Gemini API not configured.</strong> The AI features will use fallback responses. 
+            To enable full AI functionality, add your Gemini API key to the environment variables.
+          </Typography>
+        </Alert>
+      )}
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Trip Details
+          </Typography>
+          
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr' }, gap: 2, mb: 3 }}>
+            <TextField
+              label="Destination"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              placeholder="e.g., Paris, Tokyo, New York"
+              fullWidth
+              required
+            />
+            
+            <TextField
+              label="Duration (days)"
+              type="number"
+              value={duration}
+              onChange={(e) => setDuration(parseInt(e.target.value) || 7)}
+              inputProps={{ min: 1, max: 30 }}
+              fullWidth
+            />
+            
+            <TextField
+              label="Start Date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+          </Box>
+
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Budget Range
+            </Typography>
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <Select
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+              >
+                <MenuItem value="budget">Budget</MenuItem>
+                <MenuItem value="mid-range">Mid-range</MenuItem>
+                <MenuItem value="luxury">Luxury</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+          <Box>
+            <Typography variant="subtitle1" gutterBottom>
+              Interests & Preferences
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {interestOptions.map((interest) => (
+                <Chip
+                  key={interest}
+                  label={interest}
+                  clickable
+                  color={interests.includes(interest) ? 'primary' : 'default'}
+                  onClick={() => handleInterestToggle(interest)}
+                  variant={interests.includes(interest) ? 'filled' : 'outlined'}
+                />
+              ))}
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={activeTab} onChange={handleTabChange} aria-label="AI planning options">
+            <Tab 
+              icon={<TravelExploreIcon />} 
+              label="Complete Trip Plan" 
+              id="ai-tab-0"
+              aria-controls="ai-tabpanel-0"
+            />
+            <Tab 
+              icon={<HotelIcon />} 
+              label="Hotel Recommendations" 
+              id="ai-tab-1"
+              aria-controls="ai-tabpanel-1"
+            />
+            <Tab 
+              icon={<ActivityIcon />} 
+              label="Activities & Attractions" 
+              id="ai-tab-2"
+              aria-controls="ai-tabpanel-2"
+            />
+            <Tab 
+              icon={<SaveIcon />} 
+              label="Create Trip" 
+              id="ai-tab-3"
+              aria-controls="ai-tabpanel-3"
+            />
+          </Tabs>
+        </Box>
+
+        {/* Complete Trip Plan Tab */}
+        <TabPanel value={activeTab} index={0}>
+          <Typography variant="h6" gutterBottom>
+            Complete Trip Recommendations
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Get comprehensive travel recommendations including attractions, dining, transportation, and daily itinerary.
+          </Typography>
+
+          <Button 
+            variant="contained" 
+            onClick={generateTripPlan}
+            disabled={loading || !destination.trim()}
+            startIcon={loading ? <CircularProgress size={20} /> : <TravelExploreIcon />}
+            sx={{ mb: 3 }}
+          >
+            {loading ? 'Generating...' : 'Generate Trip Plan'}
+          </Button>
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+            </Alert>
+          )}
+
+          {aiResponse && (
+            <Paper sx={{ p: 3, mt: 3 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                AI-Generated Trip Plan
+              </Typography>
+              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                {aiResponse}
+              </Typography>
+            </Paper>
+          )}
+        </TabPanel>
+
+        {/* Hotel Recommendations Tab */}
+        <TabPanel value={activeTab} index={1}>
+          <Typography variant="h6" gutterBottom>
+            Hotel Recommendations
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Get personalized hotel recommendations based on your budget and preferences.
+          </Typography>
+
+          <Button 
+            variant="contained" 
+            onClick={generateHotelRecommendations}
+            disabled={loading || !destination.trim()}
+            startIcon={loading ? <CircularProgress size={20} /> : <HotelIcon />}
+            sx={{ mb: 3 }}
+          >
+            {loading ? 'Generating...' : 'Get Hotel Recommendations'}
+          </Button>
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+            </Alert>
+          )}
+
+          {aiResponse && (
+            <Paper sx={{ p: 3, mt: 3 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Hotel Recommendations
+              </Typography>
+              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                {aiResponse}
+              </Typography>
+            </Paper>
+          )}
+        </TabPanel>
+
+        {/* Activities Tab */}
+        <TabPanel value={activeTab} index={2}>
+          <Typography variant="h6" gutterBottom>
+            Activities & Attractions
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Discover activities and attractions tailored to your interests.
+          </Typography>
+
+          <Button 
+            variant="contained" 
+            onClick={generateActivities}
+            disabled={loading || !destination.trim() || interests.length === 0}
+            startIcon={loading ? <CircularProgress size={20} /> : <ActivityIcon />}
+            sx={{ mb: 3 }}
+          >
+            {loading ? 'Generating...' : 'Find Activities'}
+          </Button>
+
+          {interests.length === 0 && (
+            <Alert severity="info" sx={{ mb: 3 }}>
+              Please select at least one interest to get personalized activity recommendations.
+            </Alert>
+          )}
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+            </Alert>
+          )}
+
+          {aiResponse && (
+            <Paper sx={{ p: 3, mt: 3 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Recommended Activities
+              </Typography>
+              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                {aiResponse}
+              </Typography>
+            </Paper>
+          )}
+        </TabPanel>
+
+        {/* Create Trip Tab */}
+        <TabPanel value={activeTab} index={3}>
+          <Typography variant="h6" gutterBottom>
+            Create & Save Trip
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Generate a structured trip plan that can be saved to your trip collection.
+          </Typography>
+
+          <Button 
+            variant="contained" 
+            onClick={generateStructuredPlan}
+            disabled={loading || !destination.trim() || !startDate}
+            startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
+            sx={{ mb: 3 }}
+          >
+            {loading ? 'Generating...' : 'Generate & Preview Trip'}
+          </Button>
+
+          {(!destination.trim() || !startDate) && (
+            <Alert severity="info" sx={{ mb: 3 }}>
+              Please enter a destination and start date to generate a structured trip plan.
+            </Alert>
+          )}
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+            </Alert>
+          )}
+        </TabPanel>
+      </Card>
+
+      {/* Save Trip Dialog */}
+      <Dialog 
+        open={showSaveDialog} 
+        onClose={() => setShowSaveDialog(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            Save Generated Trip
+            <IconButton onClick={() => setShowSaveDialog(false)} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {structuredPlan && (
+            <Box>
+              <Typography variant="h6" gutterBottom>
+                {structuredPlan.tripName}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {structuredPlan.startDate} to {structuredPlan.endDate}
+              </Typography>
+              
+              <Divider sx={{ my: 2 }} />
+              
+              <Typography variant="subtitle1" gutterBottom>
+                Destinations:
+              </Typography>
+              
+              {structuredPlan.destinations?.map((dest, index) => (
+                <Accordion key={index} sx={{ mb: 1 }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <LocationIcon sx={{ mr: 1, color: 'primary.main' }} />
+                      <Typography variant="body1">{dest.name}</Typography>
+                    </Box>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Typography variant="body2" color="text.secondary">
+                      📍 {dest.location}
+                    </Typography>
+                    {dest.latitude && dest.longitude && (
+                      <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                        Coordinates: {dest.latitude}, {dest.longitude}
+                      </Typography>
+                    )}
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowSaveDialog(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={saveGeneratedTrip} 
+            variant="contained"
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
+          >
+            {loading ? 'Saving...' : 'Save Trip'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
+
+export default TripPlanner;

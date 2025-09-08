@@ -11,8 +11,8 @@ import {
 } from '@mui/material';
 import TripList from './TripListSimple.jsx';
 import TripDetail from './TripDetailSimple.jsx';
-import TripPlanner from './TripPlannerSimple';
-import { DatabaseTestingPanel } from './DatabaseTestingPanel';
+import TripPlanner from './TripPlannerSimple.jsx';
+import { DatabaseTestingPanel } from './DatabaseTestingPanel.jsx';
 import { tripService } from '../services/TripService.js';
 
 /**
