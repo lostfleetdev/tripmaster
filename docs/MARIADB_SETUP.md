@@ -1,10 +1,10 @@
-# MariaDB Setup Guide for TRIPI
+# MariaDB Setup Guide for TripMaster
 
-This guide will help you set up MariaDB for local development with the TRIPI application.
+This guide will help you set up MariaDB for local development with the TripMaster application.
 
 ## Overview
 
-TRIPI now supports MariaDB integration through a local backend service. The architecture includes:
+TripMaster now supports MariaDB integration through a local backend service. The architecture includes:
 - React frontend (port 3000)
 - Express.js backend API (port 3001)
 - MariaDB database (port 3306)
@@ -204,7 +204,7 @@ Visit http://localhost:3001/health in your browser. You should see:
 ```json
 {
   "status": "OK",
-  "message": "TRIPI Server is running",
+  "message": "TripMaster Server is running",
   "timestamp": "2024-01-01T00:00:00.000Z"
 }
 ```
@@ -216,7 +216,7 @@ Initializing database...
 Connecting to MariaDB...
 Creating database if it doesn't exist...
 Database initialization completed successfully!
-🚀 TRIPI Server is running on port 3001
+🚀 TripMaster Server is running on port 3001
 ```
 
 ### 3. Test the Frontend

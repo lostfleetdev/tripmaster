@@ -86,7 +86,7 @@ const Layout = () => {
       <AppBar position="static" elevation={1}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            🗺️ TRIPI - Trip Management
+            🗺️ TripMaster - Trip Management
           </Typography>
         </Toolbar>
       </AppBar>

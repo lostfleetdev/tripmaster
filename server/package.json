@@ -1,7 +1,7 @@
 {
-  "name": "tripi-server",
+  "name": "tripmaster-server",
   "version": "1.0.0",
-  "description": "Backend service for TRIPI app with MariaDB integration",
+  "description": "Backend service for TripMaster app with MariaDB integration",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

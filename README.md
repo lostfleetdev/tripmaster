@@ -1,4 +1,4 @@
-# 🗺️ TRIPI - Trip Management Application
+# 🗺️ TripMaster - Trip Management Application
 
 A modern React-based trip management application built with Material-UI, featuring AI-powered trip planning, interactive maps, and comprehensive travel organization tools.
 
@@ -17,9 +17,9 @@ A modern React-based trip management application built with Material-UI, featuri
 
 ### Technical Features
 - **Responsive Design**: Material-UI components for modern, mobile-friendly interface
-- **Local Storage**: Self-contained data persistence for development
+- **Dual Storage Options**: MariaDB for production with IndexedDB fallback
 - **Environment Configuration**: Secure API key management
-- **TypeScript**: Full type safety and better development experience
+- **Modern JavaScript**: React with JSX for streamlined development
 
 ## 🚀 Quick Start
 
@@ -32,8 +32,8 @@ A modern React-based trip management application built with Material-UI, featuri
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/lostfleetdev/tripi.git
-   cd tripi
+   git clone https://github.com/lostfleetdev/tripmaster.git
+   cd tripmaster
    ```
 
 2. **Install dependencies**
@@ -101,10 +101,10 @@ A modern React-based trip management application built with Material-UI, featuri
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **React 19** - Modern React with TypeScript
+- **React 19** - Modern React with JavaScript/JSX
 - **Material-UI v7** - Comprehensive React component library
 - **React Router** - Client-side routing
-- **TypeScript** - Type-safe JavaScript
+- **Modern JavaScript** - ES6+ features with JSX syntax
 
 ### Maps & Visualization
 - **Leaflet.js** - Interactive maps
@@ -129,24 +129,24 @@ A modern React-based trip management application built with Material-UI, featuri
 ## 📁 Project Structure
 
 ```
-tripi/
+tripmaster/
 ├── public/                 # Static assets
 ├── src/
 │   ├── components/         # React components
-│   │   ├── Layout.tsx     # Main layout component
-│   │   ├── TripList.tsx   # Trip listing and management
-│   │   ├── TripDetail.tsx # Trip details and destinations
-│   │   ├── TripPlanner.tsx# AI-powered trip planning
-│   │   ├── MapView.tsx    # Interactive map component
-│   │   └── DatabaseTestingPanel.tsx # Database testing utilities
+│   │   ├── Layout.jsx     # Main layout component
+│   │   ├── TripListSimple.jsx   # Trip listing and management
+│   │   ├── TripDetailSimple.jsx # Trip details and destinations
+│   │   ├── TripPlannerSimple.jsx# AI-powered trip planning
+│   │   ├── MapView.jsx    # Interactive map component
+│   │   └── DatabaseTestingPanel.jsx # Database testing utilities
 │   ├── services/          # Business logic and API services
-│   │   ├── TripService.ts # Trip data management facade
-│   │   ├── MariaDBService.ts # MariaDB integration
-│   │   ├── IndexedDBService.ts # Browser storage fallback
-│   │   └── GeminiService.ts# AI service integration
-│   ├── types.ts          # TypeScript type definitions
-│   ├── App.tsx           # Main application component
-│   └── index.tsx         # Application entry point
+│   │   ├── TripService.js # Trip data management facade
+│   │   ├── MariaDBService.js # MariaDB integration
+│   │   ├── IndexedDBService.js # Browser storage fallback
+│   │   └── GeminiService.js# AI service integration
+│   ├── types.js          # JavaScript type definitions
+│   ├── App.js           # Main application component
+│   └── index.js         # Application entry point
 ├── server/               # Backend API server
 │   ├── controllers/      # API route handlers
 │   ├── config/          # Database configuration
@@ -348,8 +348,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- Create an [issue](https://github.com/lostfleetdev/tripi/issues) for bug reports
-- Join discussions in [GitHub Discussions](https://github.com/lostfleetdev/tripi/discussions)
+- Create an [issue](https://github.com/lostfleetdev/tripmaster/issues) for bug reports
+- Join discussions in [GitHub Discussions](https://github.com/lostfleetdev/tripmaster/discussions)
 - Follow the project for updates
 
 ---
